@@ -1,4 +1,4 @@
-# osu!lazer Manager UI
+# osu!lazer Manager UI (Alpha)
 
 An osu!lazer AppImage Manager for Linux. osu!lazer Manager UI is built on top of [osu-lazer-manager](https://github.com/nanashi-1/osu-lazer-manager).
 
