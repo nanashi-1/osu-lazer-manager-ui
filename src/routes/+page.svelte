@@ -1,13 +1,17 @@
 <script lang="ts">
-  import { Select, Button, Progressbar, Spinner } from "flowbite-svelte";
-  import {
-    PlaySolid,
-    CloseCircleOutline,
-    DownloadSolid,
-  } from "flowbite-svelte-icons";
+  import { Select, Button, Progressbar } from "flowbite-svelte";
+  import { DownloadSolid } from "flowbite-svelte-icons";
   import { invoke } from "@tauri-apps/api/tauri";
-  import { appWindow } from "@tauri-apps/api/window";
   import { listen } from "@tauri-apps/api/event";
+  import CloseButton from "$lib/components/CloseButton.svelte";
+  import ActionButton from "$lib/components/ActionButton.svelte";
+  import { fade } from "svelte/transition";
+
+  let fadeTransition = { duration: 500, delay: 500 };
+
+  $: updateButtonStyle = updateInstallable
+    ? "p-2 px-4"
+    : "p-0 w-0 border-0 m-[-2px]";
 
   let selectedVersion = "";
   let versions: string[] = [];
@@ -37,17 +41,7 @@
     });
 
   let updateInstallable = false;
-  let currentVersionInstalled = true;
-
-  // Check if current version is installed
-  $: invoke("is_installed", { version: selectedVersion })
-    .then((value) => {
-      /** @ts-expect-error */
-      currentVersionInstalled = value;
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+  let currentVersionInstalled = false;
 
   $: invoke("is_latest_installed")
     .then((value) => {
@@ -60,19 +54,15 @@
 
   let downloadSize = 0;
   let downloadProgress = 0;
-  $: progress = Math.round((downloadProgress / downloadSize) * 100);
 
   $: downloadInProgress = downloadSize > 0 && downloadProgress < downloadSize;
+
   $: if (downloadSize > 0 && downloadProgress >= downloadSize) {
     downloadSize = 0;
     currentVersionInstalled = true;
   }
 
-  function install() {
-    invoke("install", { version: selectedVersion }).catch((error) => {
-      console.error(error);
-    });
-  }
+  $: progress = Math.round((downloadProgress / downloadSize) * 100);
 
   // Listen for download events
   listen("size", (event) => {
@@ -84,6 +74,12 @@
     /** @ts-expect-error */
     downloadProgress = event.payload;
   });
+
+  function install() {
+    invoke("install", { version: selectedVersion }).catch((error) => {
+      console.error(error);
+    });
+  }
 </script>
 
 <div
@@ -94,18 +90,13 @@
 
 <div class="fixed bottom-0 h-1/6 w-screen bg-gradient-to-t from-black"></div>
 
-<button
-  class="fixed right-0 top-0 m-1"
-  on:click={async () => await appWindow.close()}
->
-  <CloseCircleOutline
-    class=" h-8 w-8 text-primary-700 hover:text-primary-800"
-  />
-</button>
+<CloseButton />
 
 <div class="fixed bottom-0 flex w-screen flex-col gap-1 p-1">
   {#if downloadInProgress}
-    <Progressbar {progress} />
+    <div transition:fade={fadeTransition}>
+      <Progressbar {progress} />
+    </div>
   {/if}
 
   <div class="flex flex-row gap-1">
@@ -116,35 +107,28 @@
       disabled={downloadInProgress}
     />
 
-    {#if updateInstallable}
-      <Button
-        outline
-        class="p-2 pe-3 font-bold"
-        on:click={() => {
-          selectedVersion = versions[versions.length - 1];
-          install();
-        }}><DownloadSolid class="h-5 w-5" />Update</Button
-      >
-    {/if}
+    <Button
+      outline
+      class="font-bold overflow-hidden {updateButtonStyle} transition-all"
+      on:click={() => {
+        selectedVersion = versions[versions.length - 1];
+        install();
+      }}><DownloadSolid class="h-5 w-5" />Update</Button
+    >
 
-    {#if currentVersionInstalled && !downloadInProgress}
-      <Button
-        class="p-2 pe-3 font-bold"
-        on:click={() =>
-          invoke("launch", { version: selectedVersion }).catch((error) =>
-            console.error(error),
-          )}
-      >
-        <PlaySolid class="h-5 w-5" />Launch
-      </Button>
-    {:else if !currentVersionInstalled && !downloadInProgress}
-      <Button class="p-2 pe-3 font-bold" on:click={install}>
-        <DownloadSolid class="h-5 w-5" />Install
-      </Button>
-    {:else}
-      <Button class="p-2 pe-3 font-bold" disabled outline>
-        <Spinner class="me-1" size="4" />Installing
-      </Button>
-    {/if}
+    <ActionButton
+      bind:selectedVersion
+      bind:currentVersionInstalled
+      bind:downloadInProgress
+      {install}
+    />
   </div>
 </div>
+
+{#if selectedVersion === ""}
+  <div
+    transition:fade={fadeTransition}
+    class="absolute top-0 h-screen w-screen bg-[url('$lib/bg.jpg')] bg-cover
+    bg-center"
+  ></div>
+{/if}
