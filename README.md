@@ -10,5 +10,5 @@ An osu!lazer AppImage Manager for Linux. osu!lazer Manager UI is built on top of
 
 ### Using [zap](https://github.com/srevinsaju/zap)
 ```
-zap install --from https://github.com/nanashi-1/osu-lazer-manager-ui/releases/download/app-v0.1.0/osu-lazer-manager-ui_0.1.0_amd64.AppImage osu-lazer-manager-ui
+zap install --github --from nanashi-1/osu-lazer-manager-ui
 ```
