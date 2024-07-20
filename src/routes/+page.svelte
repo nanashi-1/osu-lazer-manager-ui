@@ -5,9 +5,13 @@
   import { listen } from "@tauri-apps/api/event";
   import CloseButton from "$lib/components/CloseButton.svelte";
   import ActionButton from "$lib/components/ActionButton.svelte";
-  import { fade } from "svelte/transition";
+  import { fade, scale } from "svelte/transition";
 
   let fadeTransition = { duration: 500, delay: 500 };
+
+  $: updateButtonStyle = updateInstallable
+    ? "p-2 px-4"
+    : "p-0 w-0 border-0 m-[-2px]";
 
   let selectedVersion = "";
   let versions: string[] = [];
@@ -90,7 +94,9 @@
 
 <div class="fixed bottom-0 flex w-screen flex-col gap-1 p-1">
   {#if downloadInProgress}
-    <Progressbar {progress} />
+    <div transition:fade={fadeTransition}>
+      <Progressbar {progress} />
+    </div>
   {/if}
 
   <div class="flex flex-row gap-1">
@@ -101,16 +107,14 @@
       disabled={downloadInProgress}
     />
 
-    {#if updateInstallable}
-      <Button
-        outline
-        class="p-2 pe-3 font-bold"
-        on:click={() => {
-          selectedVersion = versions[versions.length - 1];
-          install();
-        }}><DownloadSolid class="h-5 w-5" />Update</Button
-      >
-    {/if}
+    <Button
+      outline
+      class="font-bold overflow-hidden {updateButtonStyle} transition-all"
+      on:click={() => {
+        selectedVersion = versions[versions.length - 1];
+        install();
+      }}><DownloadSolid class="h-5 w-5" />Update</Button
+    >
 
     <ActionButton
       bind:selectedVersion
