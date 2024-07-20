@@ -5,7 +5,7 @@
   import { listen } from "@tauri-apps/api/event";
   import CloseButton from "$lib/components/CloseButton.svelte";
   import ActionButton from "$lib/components/ActionButton.svelte";
-  import { fade, scale } from "svelte/transition";
+  import { fade } from "svelte/transition";
 
   let fadeTransition = { duration: 500, delay: 500 };
 
